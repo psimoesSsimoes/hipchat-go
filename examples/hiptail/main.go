@@ -3,14 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
+	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/tbruyelle/hipchat-go/hipchat"
-	"github.com/yhat/scrape"
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
 )
 
 const (
@@ -38,7 +35,7 @@ func main() {
 	}
 	lastM := ""
 	for {
-		m := hist.Items[len(hist.Items)-2]
+		m := hist.Items[len(hist.Items)-1]
 		from := ""
 		switch m.From.(type) {
 		case string:
@@ -50,36 +47,23 @@ func main() {
 		msg := m.Message
 		msg = fmt.Sprintf("%s%s", strings.Replace(m.Message[:len(m.Message)], "\n", " - ", -1), moreString)
 
-		if lastM != msg && strings.ContainsAny(msg, "Orlando") {
-			msg = fmt.Sprintf("%s%s", strings.Replace(m.Message[:len(m.Message)], "\n", " - ", -1), moreString)
+		if lastM != msg {
 			fmt.Printf("%s [%s]: %s\n", from, m.Date, msg)
-			lastM = msg
-			resp, err := http.Get("https://news.ycombinator.com/")
-			if err != nil {
-				panic(err)
-			}
-			root, err := html.Parse(resp.Body)
-			if err != nil {
-				panic(err)
-			}
 
-			// define a matcher
-			matcher := func(n *html.Node) bool {
-				// must check for nil values
-				if n.DataAtom == atom.A && n.Parent != nil && n.Parent.Parent != nil {
-					return scrape.Attr(n.Parent.Parent, "class") == "athing"
+			uriString := strings.Fields(msg)[11]
+
+			out, err := exec.Command("/usr/bin/python", "/home/psimoes/Github/hipchat-go/examples/hiptail/login.py", fmt.Sprintf("%s", uriString)).Output()
+
+			if err != nil {
+				fmt.Println("atum")
+			} else {
+				if fmt.Sprintf("%s", out) == "true" {
+					//curl
 				}
-				return false
 			}
-			// grab all articles and print them
-			articles := scrape.FindAll(root, matcher)
-			for i, article := range articles {
-				fmt.Printf("%2d %s (%s)\n", i, scrape.Text(article), scrape.Attr(article, "href"))
-
-			}
+			lastM = msg
 		}
-
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 15)
 	}
 
 	// }
