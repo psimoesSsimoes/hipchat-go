@@ -3,9 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/tbruyelle/hipchat-go/hipchat"
+	"github.com/yhat/scrape"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 const (
@@ -14,8 +19,8 @@ const (
 )
 
 var (
-	token  = flag.String("token", "", "The HipChat AuthToken")
-	roomId = flag.String("room", "", "The HipChat room id")
+	token  = flag.String("token", "nTx2TZMf5HMxB2Oi2WPmEdsWM2cDY2hLxc8Uolf4", "The HipChat AuthToken")
+	roomId = flag.String("room", "962414", "The HipChat room id")
 )
 
 func main() {
@@ -31,7 +36,9 @@ func main() {
 		fmt.Printf("Server returns %+v\n", resp)
 		return
 	}
-	for _, m := range hist.Items {
+	lastM := ""
+	for {
+		m := hist.Items[len(hist.Items)-2]
 		from := ""
 		switch m.From.(type) {
 		case string:
@@ -41,9 +48,39 @@ func main() {
 			from = f["name"].(string)
 		}
 		msg := m.Message
-		if len(m.Message) > (maxMsgLen - len(moreString)) {
+		msg = fmt.Sprintf("%s%s", strings.Replace(m.Message[:len(m.Message)], "\n", " - ", -1), moreString)
+
+		if lastM != msg && strings.ContainsAny(msg, "Orlando") {
 			msg = fmt.Sprintf("%s%s", strings.Replace(m.Message[:len(m.Message)], "\n", " - ", -1), moreString)
+			fmt.Printf("%s [%s]: %s\n", from, m.Date, msg)
+			lastM = msg
+			resp, err := http.Get("https://news.ycombinator.com/")
+			if err != nil {
+				panic(err)
+			}
+			root, err := html.Parse(resp.Body)
+			if err != nil {
+				panic(err)
+			}
+
+			// define a matcher
+			matcher := func(n *html.Node) bool {
+				// must check for nil values
+				if n.DataAtom == atom.A && n.Parent != nil && n.Parent.Parent != nil {
+					return scrape.Attr(n.Parent.Parent, "class") == "athing"
+				}
+				return false
+			}
+			// grab all articles and print them
+			articles := scrape.FindAll(root, matcher)
+			for i, article := range articles {
+				fmt.Printf("%2d %s (%s)\n", i, scrape.Text(article), scrape.Attr(article, "href"))
+
+			}
 		}
-		fmt.Printf("%s [%s]: %s\n", from, m.Date, msg)
+
+		time.Sleep(time.Second * 5)
 	}
+
+	// }
 }
