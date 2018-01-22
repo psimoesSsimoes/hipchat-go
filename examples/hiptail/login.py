@@ -6,6 +6,7 @@ import requests
 from lxml import html
 from bs4 import BeautifulSoup
 import json
+import time
 
 uri = str(sys.argv[1])
 # entity_id = uri.split("/")[4]
@@ -86,4 +87,6 @@ for anid in ids:
     mClass=False
     mDept=False
     mSubClass=False
+    time.sleep(3)
+
 #    #print actualjson['canonical'][0]['stash']
