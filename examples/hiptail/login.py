@@ -58,35 +58,38 @@ response = br.response()
 page = response.read()
 tree = html.fromstring(page)
 ids = tree.xpath('/html/body/div[2]/div[2]/div/div/table/tbody/tr/td/a/text()');
-print (row)
+
 for anid in ids: 
     br.open("https://tools.sonaesr.net/orders/"+str(anid))
+    response = br.response()
     page = response.read()
     tree = html.fromstring(page)
     stringasjson = tree.xpath('//*[@id="order_json"]')[0].text_content();
     actualjson = json.loads(stringasjson)
-    for i in actualjson['stash']['checks']['order_items']['msg']:
+    try:
+        for i in actualjson['stash']['checks']['order_items']['msg']:
     
-        subject = ''.join([f for f in i if not f.isdigit()])
-        if subject == 'Item  missing Dept':
-            mDept=True
-        if subject == 'Item  missing Class':
-            mClass=True
-        if subject == 'Item  missing SubClass':
-            mSubClass=True
+            subject = ''.join([f for f in i if not f.isdigit()])
+            if subject == 'Item  missing Dept':
+                mDept=True
+            if subject == 'Item  missing Class':
+                mClass=True
+            if subject == 'Item  missing SubClass':
+                mSubClass=True
 
 #curl -X PUT http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/30677222/status -d '{ "status" : "FIXING" }'
 
-    data = {
-        "status":"Fixing"
-    }
+        data = {
+            "status":"Fixing"
+        }
 
-    if mDept==True and mClass==True and mSubClass==True:
-        r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(anid)+"/status", json={"status": "FIXING"})
-        print(r.status_code, r.reason,anid)
-    mClass=False
-    mDept=False
-    mSubClass=False
-    time.sleep(3)
-
+        if mDept==True and mClass==True and mSubClass==True:
+            r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(anid)+"/status", json={"status": "FIXING"})
+            print(r.status_code, r.reason,anid)
+        mClass=False
+        mDept=False
+        mSubClass=False
+        time.sleep(3)
+    except:
+        print ("id "+str(anid)+" is not a targetted validation error")
 #    #print actualjson['canonical'][0]['stash']
