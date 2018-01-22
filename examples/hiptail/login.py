@@ -4,11 +4,12 @@ import cookielib
 import sys
 import requests
 from lxml import html
+from bs4 import BeautifulSoup
 import json
 
 uri = str(sys.argv[1])
-entity_id = uri.split("/")[4]
-print entity_id
+# entity_id = uri.split("/")[4]
+# print entity_id
 print uri
 
 #flags
@@ -48,30 +49,35 @@ br.select_form(nr=0)
 br["username"]="pedrosimoes@parceiro.sonae.pt"
 br["password"]="aTOEdm7W5AUW"
 br.submit()
+# /html/body/div[2]/div[8]/div/div/table/tbody/tr/td[2]/a
+
+br.open("https://tools.sonaesr.net/orders?store_id=1460&status=1001")
 response = br.response()
+
 page = response.read()
 tree = html.fromstring(page)
-stringasjson = tree.xpath('//*[@id="order_json"]')[0].text_content();
+row = tree.xpath('/html/body/div[2]/div[2]/div/div/table/tbody/tr/td/a/text()');
+print (row)
 actualjson = json.loads(stringasjson)
 
 
-for i in actualjson['stash']['checks']['order_items']['msg']:
+#for i in actualjson['stash']['checks']['order_items']['msg']:
     
-    subject = ''.join([f for f in i if not f.isdigit()])
-    if subject == 'Item  missing Dept':
-            mDept=True
-    if subject == 'Item  missing Class':
-            mClass=True
-    if subject == 'Item  missing SubClass':
-            mSubClass=True
+#    subject = ''.join([f for f in i if not f.isdigit()])
+#    if subject == 'Item  missing Dept':
+#            mDept=True
+#    if subject == 'Item  missing Class':
+#            mClass=True
+#    if subject == 'Item  missing SubClass':
+#            mSubClass=True
 
-#curl -X PUT http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/30677222/status -d '{ "status" : "FIXING" }'
+##curl -X PUT http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/30677222/status -d '{ "status" : "FIXING" }'
 
-data = {
-    "status":"Fixing"
-}
+#data = {
+#    "status":"Fixing"
+#}
 
-if mDept==True and mClass==True and mSubClass==True:
-    r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(entity_id)+"/status", json={"status": "FIXING"})
-    print(r.status_code, r.reason)
-    #print actualjson['canonical'][0]['stash']
+#if mDept==True and mClass==True and mSubClass==True:
+#    r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(entity_id)+"/status", json={"status": "FIXING"})
+#    print(r.status_code, r.reason)
+#    #print actualjson['canonical'][0]['stash']

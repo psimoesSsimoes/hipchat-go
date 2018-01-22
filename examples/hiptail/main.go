@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"os/exec"
 	"strings"
 	"time"
@@ -46,25 +47,28 @@ func main() {
 		}
 		msg := m.Message
 		msg = fmt.Sprintf("%s%s", strings.Replace(m.Message[:len(m.Message)], "\n", " - ", -1), moreString)
-
 		if lastM != msg {
-			fmt.Printf("%s [%s]: %s\n", from, m.Date, msg)
-
-			uriString := strings.Fields(msg)[11]
-
-			out, err := exec.Command("/usr/bin/python", "/home/psimoes/Github/hipchat-go/examples/hiptail/login.py", fmt.Sprintf("%s", uriString)).Output()
-
-			if err != nil {
-				fmt.Println("atum")
-			} else {
-				if fmt.Sprintf("%s", out) == "true" {
-					//curl
+			if len(strings.Fields(msg)) > 11 {
+				uriString := strings.Fields(msg)[11]
+				if isValidUrl(uriString) {
+					fmt.Println("isValid")
+					exec.Command("/usr/bin/python", "/home/psimoes/Github/hipchat-go/examples/hiptail/login.py", fmt.Sprintf("%s", uriString)).Output()
 				}
+				fmt.Println("Ping")
+
 			}
-			lastM = msg
 		}
-		time.Sleep(time.Second * 15)
+		lastM = msg
+		time.Sleep(time.Second * 5)
 	}
 
 	// }
+}
+func isValidUrl(toTest string) bool {
+	_, err := url.ParseRequestURI(toTest)
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
 }
