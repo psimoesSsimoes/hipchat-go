@@ -56,28 +56,34 @@ response = br.response()
 
 page = response.read()
 tree = html.fromstring(page)
-row = tree.xpath('/html/body/div[2]/div[2]/div/div/table/tbody/tr/td/a/text()');
+ids = tree.xpath('/html/body/div[2]/div[2]/div/div/table/tbody/tr/td/a/text()');
 print (row)
-actualjson = json.loads(stringasjson)
-
-
-#for i in actualjson['stash']['checks']['order_items']['msg']:
+for anid in ids: 
+    br.open("https://tools.sonaesr.net/orders/"+str(anid))
+    page = response.read()
+    tree = html.fromstring(page)
+    stringasjson = tree.xpath('//*[@id="order_json"]')[0].text_content();
+    actualjson = json.loads(stringasjson)
+    for i in actualjson['stash']['checks']['order_items']['msg']:
     
-#    subject = ''.join([f for f in i if not f.isdigit()])
-#    if subject == 'Item  missing Dept':
-#            mDept=True
-#    if subject == 'Item  missing Class':
-#            mClass=True
-#    if subject == 'Item  missing SubClass':
-#            mSubClass=True
+        subject = ''.join([f for f in i if not f.isdigit()])
+        if subject == 'Item  missing Dept':
+            mDept=True
+        if subject == 'Item  missing Class':
+            mClass=True
+        if subject == 'Item  missing SubClass':
+            mSubClass=True
 
-##curl -X PUT http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/30677222/status -d '{ "status" : "FIXING" }'
+#curl -X PUT http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/30677222/status -d '{ "status" : "FIXING" }'
 
-#data = {
-#    "status":"Fixing"
-#}
+    data = {
+        "status":"Fixing"
+    }
 
-#if mDept==True and mClass==True and mSubClass==True:
-#    r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(entity_id)+"/status", json={"status": "FIXING"})
-#    print(r.status_code, r.reason)
+    if mDept==True and mClass==True and mSubClass==True:
+        r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(entity_id)+"/status", json={"status": "FIXING"})
+        print(r.status_code, r.reason,anid)
+    mClass=False
+    mDept=False
+    mSubClass=False
 #    #print actualjson['canonical'][0]['stash']
