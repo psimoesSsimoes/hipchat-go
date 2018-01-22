@@ -81,7 +81,7 @@ for anid in ids:
     }
 
     if mDept==True and mClass==True and mSubClass==True:
-        r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(entity_id)+"/status", json={"status": "FIXING"})
+        r = requests.put("http://orlando-ws-prd.sonaesr.net/api/1/orlando/orders/"+str(anid)+"/status", json={"status": "FIXING"})
         print(r.status_code, r.reason,anid)
     mClass=False
     mDept=False
